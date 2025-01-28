@@ -11,10 +11,11 @@ export interface Song {
   artists: { id: string; name: string }[];
   album: string;
   albumId: string;
-  duration: string;
+  duration?: string|number|any;
   albumArt?: string;
   uri: string;
   previewUrl?: string;
+  title?:string;
 }
 
 export interface Playlist {

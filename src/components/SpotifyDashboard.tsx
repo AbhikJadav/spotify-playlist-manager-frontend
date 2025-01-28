@@ -4,13 +4,14 @@ import { playlists } from '../services/api';
 import { Playlist, Song } from '../types';
 import axios from 'axios';
 import { 
-    Box, TextField, Button, Card, CardContent, CardMedia, Typography, Grid, 
+    Box, TextField, Button, Typography, Grid, 
     CircularProgress, InputAdornment, Dialog, DialogTitle, DialogContent, 
-    List, ListItem, ListItemText, ListItemAvatar, Avatar, Snackbar, Alert, Paper
+    List, ListItemText, ListItemAvatar, Avatar, Snackbar, Alert, Paper,
+    ListItem
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { useNavigate } from 'react-router-dom';
+import { PlaylistDetail } from './PlaylistDetail';
 
 interface SpotifyDashboardProps {
     token: string;
@@ -387,9 +388,9 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
                         <List sx={{ pt: 0 }}>
                             {userPlaylists.map((playlist) => (
                                 <ListItem 
-                                    button 
-                                    onClick={() => handleAddToPlaylist(playlist)}
                                     key={playlist._id}
+                                    component="div"
+                                    onClick={() => handleAddToPlaylist(playlist)}
                                     sx={{
                                         '&:hover': {
                                             bgcolor: 'rgba(29, 185, 84, 0.1)',
@@ -397,32 +398,7 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
                                         }
                                     }}
                                 >
-                                    <ListItemAvatar>
-                                        <Avatar 
-                                            sx={{ bgcolor: '#1DB954' }}
-                                        >
-                                            <MusicNoteIcon />
-                                        </Avatar>
-                                    </ListItemAvatar>
-                                    <ListItemText 
-                                        primary={
-                                            <Box>
-                                                <Typography color="white">
-                                                    {playlist.name}
-                                                </Typography>
-                                                <Typography variant="body2" color="#b3b3b3">
-                                                    {playlist.songs?.length || 0} songs
-                                                </Typography>
-                                            </Box>
-                                        }
-                                        secondary={
-                                            playlist.songs?.length > 0 && (
-                                                <Typography variant="body2" color="#b3b3b3" sx={{ mt: 1 }}>
-                                                    Latest: {playlist.songs[playlist.songs.length - 1].title}
-                                                </Typography>
-                                            )
-                                        }
-                                    />
+                                    <ListItemText primary={playlist.name} />
                                 </ListItem>
                             ))}
                         </List>

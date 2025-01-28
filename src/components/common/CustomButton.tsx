@@ -1,11 +1,11 @@
 import React from 'react';
-import { Button, ButtonProps } from '@mui/material';
+import { Button } from '@mui/material';
 
-interface CustomButtonProps extends ButtonProps {
-  variant?: 'primary' | 'secondary' | 'text';
-}
+// interface CustomButtonProps extends ButtonProps {
+//   variant?: 'primary' | 'secondary' | 'text';
+// }
 
-export const CustomButton: React.FC<CustomButtonProps> = ({
+export const CustomButton: React.FC<any> = ({
   variant = 'primary',
   ...props
 }) => {

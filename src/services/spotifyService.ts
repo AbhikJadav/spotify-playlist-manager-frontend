@@ -12,6 +12,8 @@ export interface SpotifyTrack {
         images: { url: string }[];
     };
     uri: string;
+    duration_ms?:any;
+    preview_url?:any
 }
 
 export interface SpotifyProfile {

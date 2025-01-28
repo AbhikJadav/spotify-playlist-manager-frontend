@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Typography,
@@ -17,7 +17,6 @@ import {
 } from '@mui/icons-material';
 import { Playlist, Song } from '../types';
 import { CustomTextField } from './common/CustomTextField';
-import { CustomButton } from './common/CustomButton';
 import { CustomDialog } from './common/CustomDialog';
 import { CustomSnackbar } from './common/CustomSnackbar';
 
@@ -33,7 +32,7 @@ export const PlaylistDetail = ({
   onUpdateSong
 }: PlaylistDetailProps) => {
   const [editingSong, setEditingSong] = useState<Song | null>(null);
-  const [editedTitle, setEditedTitle] = useState('');
+  const [editedTitle, setEditedTitle] = useState<any>('');
   const [editedArtist, setEditedArtist] = useState('');
   const [snackbar, setSnackbar] = useState<{
     open: boolean;

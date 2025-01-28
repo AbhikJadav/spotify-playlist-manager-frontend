@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -10,7 +10,6 @@ import {
   ArrowBack as ArrowBackIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
-  MusicNote as MusicNoteIcon
 } from '@mui/icons-material';
 import { Playlist } from '../types';
 import { playlists } from '../services/api';

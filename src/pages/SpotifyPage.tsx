@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Box, Button, CircularProgress, Typography, Alert } from '@mui/material';
 import SpotifyDashboard from '../components/SpotifyDashboard';
-import { getAuthUrl } from '../services/spotifyService';
 
 const SpotifyPage: React.FC = () => {
     const [token, setToken] = useState<string>('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string>('');
-    const location = useLocation();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -39,19 +37,6 @@ const SpotifyPage: React.FC = () => {
 
         fetchToken();
     }, []);
-
-    const handleSpotifyLogin = async () => {
-        try {
-            setIsLoading(true);
-            setError('');
-            const authUrl = await getAuthUrl();
-            window.location.href = authUrl;
-        } catch (error: any) {
-            console.error('Error getting auth URL:', error);
-            setError(error.message || 'Failed to start Spotify authentication');
-            setIsLoading(false);
-        }
-    };
 
     if (isLoading) {
         return (
