@@ -89,6 +89,7 @@ export const App = () => {
               />
               <Route path="/" element={<Navigate to="/playlists" />} />
               <Route path="/callback" element={<SpotifyPage />} />
+              <Route path="*" element={<Navigate to="/playlists" />} />
             </Routes>
           </Layout>
         </Router>
