@@ -23,7 +23,9 @@ import { usePlaylist } from '../context/PlaylistContext';
 const Playlists = () => {
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
+  const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
+  const [playlistToDelete, setPlaylistToDelete] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: '', description: '', isPublic: false });
   const [error, setError] = useState('');
   const { setIsLoading } = useLoading();
@@ -64,11 +66,18 @@ const Playlists = () => {
       setIsLoading(true);
       await playlists.delete(playlistId);
       await refreshPlaylists();
+      setOpenDeleteConfirm(false);
+      setPlaylistToDelete(null);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error deleting playlist');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDeleteClick = (playlistId: string) => {
+    setPlaylistToDelete(playlistId);
+    setOpenDeleteConfirm(true);
   };
 
   if (isLoading) {
@@ -165,7 +174,7 @@ const Playlists = () => {
                       </IconButton>
                       <IconButton
                         size="small"
-                        onClick={() => handleDelete(playlist._id)}
+                        onClick={() => handleDeleteClick(playlist._id)}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -257,6 +266,39 @@ const Playlists = () => {
           <Button onClick={() => setOpenEdit(false)}>Cancel</Button>
           <Button onClick={handleUpdate} variant="contained">
             Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Playlist Dialog */}
+      <Dialog
+        open={openDeleteConfirm}
+        onClose={() => {
+          setOpenDeleteConfirm(false);
+          setPlaylistToDelete(null);
+        }}
+      >
+        <DialogTitle>Delete Playlist</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this playlist? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => {
+              setOpenDeleteConfirm(false);
+              setPlaylistToDelete(null);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            variant="contained" 
+            color="error" 
+            onClick={() => playlistToDelete && handleDelete(playlistToDelete)}
+          >
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
