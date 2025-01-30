@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { playlists } from '../services/api';
 import { Playlist } from '../types';
+import { useAuth } from './AuthContext';
 
 interface PlaylistContextType {
   userPlaylists: Playlist[];
@@ -12,9 +13,12 @@ const PlaylistContext = createContext<PlaylistContextType | undefined>(undefined
 
 export const PlaylistProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const fetchPlaylists = async () => {
+    if (!isAuthenticated) return;
+    
     setIsLoading(true);
     try {
       const data = await playlists.getAll();
@@ -27,8 +31,12 @@ export const PlaylistProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   useEffect(() => {
-    fetchPlaylists();
-  }, []);
+    if (isAuthenticated) {
+      fetchPlaylists();
+    } else {
+      setUserPlaylists([]);
+    }
+  }, [isAuthenticated]);
 
   const refreshPlaylists = async () => {
     await fetchPlaylists();
