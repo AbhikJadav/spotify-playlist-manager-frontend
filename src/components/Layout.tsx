@@ -1,10 +1,17 @@
 import { Box, AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { usePlaylist } from '../context/PlaylistContext';
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const { refreshPlaylists } = usePlaylist();
+
+  const handlePlaylistsClick = () => {
+    refreshPlaylists();
+    navigate('/playlists');
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -15,7 +22,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           </Typography>
           {isAuthenticated ? (
             <>
-              <Button color="inherit" onClick={() => navigate('/playlists')}>
+              <Button color="inherit" onClick={handlePlaylistsClick}>
                 My Playlists
               </Button>
               <Button color="inherit" onClick={() => navigate('/spotify')}>
