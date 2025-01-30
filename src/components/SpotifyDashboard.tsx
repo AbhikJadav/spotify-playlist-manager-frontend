@@ -13,6 +13,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 import { PlaylistDetail } from './PlaylistDetail';
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 interface SpotifyDashboardProps {
     token: string;
 }
@@ -23,6 +25,8 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
     const [searchResults, setSearchResults] = useState<SpotifyTrack[]>([]);
     const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
     const [loading, setLoading] = useState(false);
+    const [playlistsLoading, setPlaylistsLoading] = useState(true);
+    const [addingSong, setAddingSong] = useState(false);
     const [selectedTrack, setSelectedTrack] = useState<SpotifyTrack | null>(null);
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
@@ -38,6 +42,7 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
 
     useEffect(() => {
         const fetchPlaylists = async () => {
+            setPlaylistsLoading(true);
             try {
                 const data = await playlists.getAll();
                 setUserPlaylists(data);
@@ -48,6 +53,8 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
                     message: 'Failed to fetch playlists',
                     severity: 'error'
                 });
+            } finally {
+                setPlaylistsLoading(false);
             }
         };
         fetchPlaylists();
@@ -102,7 +109,7 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
             setSelectedPlaylist(updatedPlaylist);
             setSnackbar({
                 open: true,
-                message: 'Song deleted successfully!',
+                message: 'Song deleted successfully',
                 severity: 'success'
             });
         } catch (error) {
@@ -128,7 +135,7 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
             setSelectedPlaylist(updatedPlaylist);
             setSnackbar({
                 open: true,
-                message: 'Song updated successfully!',
+                message: 'Song updated successfully',
                 severity: 'success'
             });
         } catch (error) {
@@ -144,6 +151,7 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
     const handleAddToPlaylist = async (playlist: Playlist) => {
         if (!selectedTrack) return;
 
+        setAddingSong(true);
         try {
             // Create the song object matching the backend schema
             const newSong = {
@@ -163,7 +171,7 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
 
             // Add song to playlist using the API service
             const response = await axios.post(
-                `https://spotify-playlist-manger-backend.vercel.app/api/playlists/${playlist._id}/songs`,
+                `${API_URL}/playlists/${playlist._id}/songs`,
                 { song: newSong },
                 {
                     headers: {
@@ -192,10 +200,11 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
                 message: error instanceof Error ? error.message : 'Failed to add track to playlist',
                 severity: 'error'
             });
+        } finally {
+            setAddingSong(false);
+            setOpenDialog(false);
+            setSelectedTrack(null);
         }
-
-        setOpenDialog(false);
-        setSelectedTrack(null);
     };
 
     const handleCloseDialog = () => {
@@ -312,7 +321,11 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
                         <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
                             Your Playlists
                         </Typography>
-                        {userPlaylists.length === 0 ? (
+                        {playlistsLoading ? (
+                            <Box display="flex" justifyContent="center" alignItems="center" height="200px">
+                                <CircularProgress />
+                            </Box>
+                        ) : userPlaylists.length === 0 ? (
                             <Box display="flex" justifyContent="center" alignItems="center" p={3}>
                                 <Typography sx={{ color: '#b3b3b3', textAlign: 'center' }}>
                                     No playlists found. Create your first playlist to get started!
@@ -377,13 +390,13 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
                 }}
             >
                 <DialogTitle sx={{ color: '#1DB954' }}>
-                    Select Playlist
+                    Add to Playlist
                 </DialogTitle>
                 <DialogContent>
-                    {userPlaylists.length === 0 ? (
-                        <Typography color="white">
-                            No playlists found. Create a playlist first!
-                        </Typography>
+                    {addingSong ? (
+                        <Box display="flex" justifyContent="center" alignItems="center" p={3}>
+                            <CircularProgress />
+                        </Box>
                     ) : (
                         <List sx={{ pt: 0 }}>
                             {userPlaylists.map((playlist) => (

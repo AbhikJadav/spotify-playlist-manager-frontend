@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-    BASE_URL: 'https://spotify-playlist-manger-backend.vercel.app',
+    BASE_URL: 'https://spotify-be-c886.onrender.com',
     ENDPOINTS: {
         AUTH: {
             LOGIN: '/api/auth/login',

@@ -1,7 +1,13 @@
 import axios from 'axios';
 import { Playlist } from '../types';
 
-const API_URL = 'https://spotify-playlist-manger-backend.vercel.app/api';
+const API_URL = import.meta.env.VITE_API_URL;
+
+let loadingCallback: ((loading: boolean) => void) | null = null;
+
+export const setLoadingCallback = (callback: (loading: boolean) => void) => {
+  loadingCallback = callback;
+};
 
 const api = axios.create({
   baseURL: API_URL,
@@ -11,13 +17,32 @@ const api = axios.create({
 });
 
 // Add token to requests if it exists
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(
+  (config) => {
+    loadingCallback?.(true);
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    loadingCallback?.(false);
+    return Promise.reject(error);
   }
-  return config;
-});
+);
+
+// Add response interceptor
+api.interceptors.response.use(
+  (response) => {
+    loadingCallback?.(false);
+    return response;
+  },
+  (error) => {
+    loadingCallback?.(false);
+    return Promise.reject(error);
+  }
+);
 
 export const auth = {
   register: async (username: string, email: string, password: string) => {
@@ -127,3 +152,5 @@ export const spotify = {
     return response.data;
   }
 };
+
+export default api;

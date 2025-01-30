@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Grid,
@@ -12,85 +12,91 @@ import {
   DialogActions,
   TextField,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import { playlists } from '../services/api';
 import { Playlist } from '../types';
+import { useLoading } from '../context/LoadingContext';
+import { usePlaylist } from '../context/PlaylistContext';
 
-export const Playlists = () => {
-  const [userPlaylists, setUserPlaylists] = useState<Playlist[]>([]);
+const Playlists = () => {
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
   const [formData, setFormData] = useState({ name: '', description: '', isPublic: false });
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    fetchPlaylists();
-  }, []);
-
-  
-  const fetchPlaylists = async () => {
-    try {
-      const data = await playlists.getAll();
-      setUserPlaylists(data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Error fetching playlists');
-    }
-  };
+  const { setIsLoading } = useLoading();
+  const { userPlaylists, refreshPlaylists, isLoading } = usePlaylist();
 
   const handleCreate = async () => {
     try {
+      setIsLoading(true);
       await playlists.create(formData.name, formData.description, formData.isPublic);
       setOpenCreate(false);
       setFormData({ name: '', description: '', isPublic: false });
-      fetchPlaylists();
+      await refreshPlaylists();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error creating playlist');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleEdit = async () => {
+  const handleUpdate = async () => {
     if (!selectedPlaylist) return;
     try {
+      setIsLoading(true);
       await playlists.update(selectedPlaylist._id, formData);
       setOpenEdit(false);
       setSelectedPlaylist(null);
       setFormData({ name: '', description: '', isPublic: false });
-      fetchPlaylists();
+      await refreshPlaylists();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error updating playlist');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDelete = async (playlistId: string) => {
     try {
+      setIsLoading(true);
       await playlists.delete(playlistId);
-      fetchPlaylists();
+      await refreshPlaylists();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error deleting playlist');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  if (isLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <Box>
-      {
-        userPlaylists.length !== 0 &&
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant="h4">My Playlists</Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setOpenCreate(true)}
-          >
-            Create Playlist
-          </Button>
-        </Box>
-      }
-      
+    <Box sx={{ p: 3 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4" component="h1">
+          Your Playlists
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddIcon />}
+          onClick={() => setOpenCreate(true)}
+        >
+          Create Playlist
+        </Button>
+      </Box>
 
       {error && (
-        <Typography color="error" sx={{ mb: 2 }}>
+        <Typography color="error" mb={2}>
           {error}
         </Typography>
       )}
@@ -130,28 +136,40 @@ export const Playlists = () => {
             <Grid item xs={12} sm={6} md={4} key={playlist._id}>
               <Card>
                 <CardContent>
-                  <Typography variant="h6">{playlist.name}</Typography>
-                  <Typography color="textSecondary">{playlist.description}</Typography>
-                  <Typography variant="body2" sx={{ mt: 1 }}>
-                    {playlist.songs.length} songs
-                  </Typography>
-                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                    <IconButton
-                      onClick={() => {
-                        setSelectedPlaylist(playlist);
-                        setFormData({
-                          name: playlist.name,
-                          description: playlist.description,
-                          isPublic: playlist.isPublic,
-                        });
-                        setOpenEdit(true);
-                      }}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleDelete(playlist._id)}>
-                      <DeleteIcon />
-                    </IconButton>
+                  <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                    <Box>
+                      <Typography variant="h6" component="h2">
+                        {playlist.name}
+                      </Typography>
+                      <Typography color="textSecondary" gutterBottom>
+                        {playlist.description}
+                      </Typography>
+                      <Typography variant="body2">
+                        {playlist.songs?.length || 0} songs
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          setSelectedPlaylist(playlist);
+                          setFormData({
+                            name: playlist.name,
+                            description: playlist.description || '',
+                            isPublic: playlist.isPublic || false,
+                          });
+                          setOpenEdit(true);
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDelete(playlist._id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
                   </Box>
                 </CardContent>
               </Card>
@@ -161,30 +179,53 @@ export const Playlists = () => {
       )}
 
       {/* Create Playlist Dialog */}
-      <Dialog open={openCreate} onClose={() => setOpenCreate(false)}>
+      <Dialog open={openCreate} onClose={() => {
+        setOpenCreate(false);
+        setFormData({ name: '', description: '', isPublic: false });
+        setError('');
+      }}>
         <DialogTitle>Create New Playlist</DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Name"
-            fullWidth
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Description"
-            fullWidth
-            multiline
-            rows={3}
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          />
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Playlist Name"
+              type="text"
+              fullWidth
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              error={formData.name.trim() === ''}
+              helperText={formData.name.trim() === '' ? 'Playlist name is required' : ''}
+              sx={{ mb: 2 }}
+            />
+            <TextField
+              margin="dense"
+              label="Description"
+              type="text"
+              fullWidth
+              multiline
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              sx={{ mb: 2 }}
+            />
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenCreate(false)}>Cancel</Button>
-          <Button onClick={handleCreate} variant="contained">
+          <Button onClick={() => {
+            setOpenCreate(false);
+            setFormData({ name: '', description: '', isPublic: false });
+            setError('');
+          }}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleCreate}
+            variant="contained"
+            disabled={!formData.name.trim()}
+          >
             Create
           </Button>
         </DialogActions>
@@ -214,7 +255,7 @@ export const Playlists = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenEdit(false)}>Cancel</Button>
-          <Button onClick={handleEdit} variant="contained">
+          <Button onClick={handleUpdate} variant="contained">
             Save
           </Button>
         </DialogActions>
@@ -222,3 +263,5 @@ export const Playlists = () => {
     </Box>
   );
 };
+
+export default Playlists;
