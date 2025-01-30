@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Playlist } from '../types';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'https://spotify-playlist-manger-backend.vercel.app/api';
 
 const api = axios.create({
   baseURL: API_URL,

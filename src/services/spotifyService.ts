@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const SPOTIFY_BASE_URL = 'https://api.spotify.com/v1';
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = 'https://spotify-playlist-manger-backend.vercel.app/api';
 
 export interface SpotifyTrack {
     id: string;

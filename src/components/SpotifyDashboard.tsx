@@ -163,7 +163,7 @@ const SpotifyDashboard: React.FC<SpotifyDashboardProps> = ({ token }) => {
 
             // Add song to playlist using the API service
             const response = await axios.post(
-                `http://localhost:3001/api/playlists/${playlist._id}/songs`,
+                `https://spotify-playlist-manger-backend.vercel.app/api/playlists/${playlist._id}/songs`,
                 { song: newSong },
                 {
                     headers: {
